@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>鸭还是鹅 · 火眼金睛大对决</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  :root{--gold:#f2b441;--goose:#e8584d;--duck:#f2c84b;--cream:#fbeccb;--ink:#2a1f17;
+    --panel:#2a1f17;--line:#4a3826;--good:#4ec77f;--bad:#e8584d;}
+  html,body{height:100%;}
+  body{background:radial-gradient(120% 90% at 50% -10%,#3a2a1d 0%,#1b1410 60%,#120d0a 100%);
+    font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;color:var(--cream);
+    overflow:hidden;user-select:none;display:flex;align-items:center;justify-content:center;min-height:100%;}
+  #app{position:relative;width:100%;max-width:440px;height:100dvh;max-height:900px;
+    display:flex;flex-direction:column;padding:12px 16px 16px;overflow:hidden;}
+
+  .screen{position:absolute;inset:0;padding:14px 16px 18px;display:flex;flex-direction:column;
+    overflow-y:auto;}
+  .screen.hide{display:none;}
+
+  /* ---------- HOME ---------- */
+  .logo{text-align:center;margin:6px 0 4px;}
+  .logo h1{font-size:30px;font-weight:900;color:var(--gold);letter-spacing:1px;
+    text-shadow:0 2px 0 #0006;line-height:1.1;}
+  .logo h1 .vs{color:var(--goose);}
+  .logo p{font-size:12px;color:#caa97c;letter-spacing:2px;margin-top:6px;}
+  .teamcard{background:var(--panel);border:1px solid var(--line);border-radius:16px;
+    padding:12px 14px;margin:10px 0;}
+  .teamrow{display:flex;align-items:center;gap:10px;}
+  .teamrow .ava{font-size:30px;}
+  .teamrow .info{flex:1;min-width:0;}
+  .teamrow .info b{font-size:16px;color:#fff;display:flex;align-items:center;gap:6px;}
+  .teamrow .edit{font-size:12px;color:var(--gold);cursor:pointer;border:1px solid var(--line);
+    border-radius:8px;padding:2px 8px;}
+  .teamrow .rank{font-size:12px;color:var(--gold);font-weight:800;margin-top:2px;}
+  .pbar{height:7px;background:#3a2a1d;border-radius:6px;overflow:hidden;margin-top:8px;}
+  .pbar i{display:block;height:100%;background:linear-gradient(90deg,#f2b441,#4ec77f);width:0;transition:.4s;}
+  .pstats{display:flex;gap:8px;margin-top:8px;}
+  .pstats div{flex:1;background:#1f1711;border:1px solid var(--line);border-radius:10px;
+    padding:6px;text-align:center;}
+  .pstats b{display:block;font-size:16px;color:#fff;}
+  .pstats span{font-size:9px;color:#b89668;}
+  .modes{display:flex;flex-direction:column;gap:10px;margin-top:4px;}
+  .mode{display:flex;align-items:center;gap:12px;background:linear-gradient(160deg,#33261b,#241a12);
+    border:1px solid var(--line);border-radius:16px;padding:13px 14px;cursor:pointer;transition:.08s;}
+  .mode:active{transform:scale(.98);}
+  .mode .ic{font-size:30px;width:42px;text-align:center;}
+  .mode .tx{flex:1;}
+  .mode .tx b{font-size:16px;color:var(--cream);}
+  .mode .tx span{display:block;font-size:11px;color:#a98b62;margin-top:2px;}
+  .mode .go{color:var(--gold);font-size:20px;}
+  .mode.lock{opacity:.55;}
+  .board-rank{background:var(--panel);border:1px solid var(--line);border-radius:16px;
+    padding:10px 12px;margin-top:12px;}
+  .board-rank h3{font-size:13px;color:var(--gold);margin-bottom:6px;display:flex;justify-content:space-between;}
+  .lbrow{display:flex;align-items:center;gap:8px;font-size:13px;padding:4px 0;border-top:1px dashed #3a2a1d;}
+  .lbrow:first-of-type{border-top:none;}
+  .lbrow .pos{width:20px;color:#b89668;font-weight:800;text-align:center;}
+  .lbrow .nm{flex:1;}.lbrow .sc{color:var(--gold);font-weight:800;}
+  .lbrow.me{color:#fff;}.lbrow.me .nm{font-weight:800;}
+  .lbrow.me{background:#3a2a1d44;border-radius:8px;}
+
+  /* ---------- PLAY ---------- */
+  .top{display:flex;align-items:center;gap:10px;margin-bottom:6px;}
+  .back{font-size:20px;cursor:pointer;color:#caa97c;padding:2px 6px;}
+  .brand{font-weight:800;font-size:14px;color:var(--gold);flex:1;line-height:1.15;}
+  .brand small{display:block;font-weight:600;font-size:10px;color:#caa97c;}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:5px 10px;text-align:center;min-width:52px;}
+  .stat b{display:block;font-size:16px;color:#fff;line-height:1;}.stat span{font-size:9px;color:#b89668;}
+  .hud{display:flex;align-items:center;gap:8px;font-size:11px;color:#caa97c;margin:2px 0 6px;min-height:16px;}
+  .hud .ch{color:var(--gold);font-weight:800;}
+  .progbar{flex:1;height:6px;background:#3a2a1d;border-radius:6px;overflow:hidden;}
+  .progbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#f2b441,#4ec77f);transition:width .3s;}
+  .lives{display:flex;gap:4px;justify-content:center;margin:0 0 6px;height:20px;}
+  .lives span{font-size:17px;filter:drop-shadow(0 1px 1px #0006);transition:.25s;}
+  .lives span.lost{opacity:.18;transform:scale(.7);}
+  .timerwrap{height:8px;background:#3a2a1d;border-radius:6px;overflow:hidden;margin-bottom:10px;}
+  #timer{height:100%;width:100%;background:linear-gradient(90deg,#4ec77f,#f2b441,#e8584d);transform-origin:left;}
+  .stage{flex:1;position:relative;display:flex;align-items:center;justify-content:center;min-height:0;}
+  .card{position:relative;width:100%;height:100%;background:linear-gradient(160deg,#fff6e6,#f4dcb4);
+    border-radius:24px;box-shadow:0 18px 40px #0008,inset 0 2px 0 #fff;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;color:var(--ink);overflow:hidden;touch-action:none;padding:10px;}
+  .order{position:relative;z-index:3;text-align:center;padding:2px 0 8px;}
+  .order b{font-size:14px;color:#9a6a33;}
+  .legwrap{position:relative;z-index:2;flex:1;width:100%;display:flex;align-items:center;justify-content:center;
+    min-height:0;transition:transform .15s;padding:2px;}
+  .legwrap img{width:100%;height:100%;object-fit:cover;border-radius:16px;box-shadow:0 10px 22px #0004;background:#0001;}
+  .legwrap .fallback{font-size:90px;}
+  .tagline{position:relative;z-index:3;text-align:center;font-size:12.5px;color:#a9783f;padding:8px 14px 2px;min-height:34px;line-height:1.5;}
+  .verdict{position:absolute;top:46%;left:50%;transform:translate(-50%,-50%) scale(.4);font-size:64px;
+    font-weight:900;opacity:0;z-index:5;pointer-events:none;text-shadow:0 4px 14px #0006;}
+  .verdict.show{animation:pop .6s ease;}
+  @keyframes pop{0%{opacity:0;transform:translate(-50%,-50%) scale(.4) rotate(-12deg);}
+    40%{opacity:1;transform:translate(-50%,-50%) scale(1.15) rotate(6deg);}100%{opacity:0;transform:translate(-50%,-50%) scale(1);}}
+  .swipehint{position:absolute;font-size:50px;font-weight:900;opacity:0;z-index:4;top:44%;}
+  .swipehint.l{left:18px;color:#caa12f;}.swipehint.r{right:18px;color:var(--goose);}
+  .combo{position:absolute;top:10px;right:12px;z-index:6;font-weight:900;color:#c93b34;font-size:15px;opacity:0;}
+  .combo.show{opacity:1;animation:cpop .4s;}
+  @keyframes cpop{0%{transform:scale(.5);}50%{transform:scale(1.3);}100%{transform:scale(1);}}
+  .controls{display:flex;gap:12px;margin-top:12px;}
+  .btn{flex:1;border:none;border-radius:18px;padding:15px 8px;font-size:17px;font-weight:800;color:#fff;
+    cursor:pointer;box-shadow:0 8px 0 #0004,0 12px 20px #0005;transition:.06s;display:flex;flex-direction:column;align-items:center;gap:2px;}
+  .btn:active{transform:translateY(5px);box-shadow:0 3px 0 #0004;}
+  .btn small{font-weight:600;font-size:10px;opacity:.85;}
+  .btn.duck{background:linear-gradient(160deg,#f7d567,#e0a72f);}
+  .btn.goose{background:linear-gradient(160deg,#f0726a,#c93b34);}
+
+  /* ---------- OVERLAYS ---------- */
+  .overlay{position:absolute;inset:0;background:#120d0af5;backdrop-filter:blur(4px);display:flex;
+    flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;z-index:30;gap:13px;overflow-y:auto;}
+  .overlay.hide{display:none;}
+  .chapter-tag{display:inline-block;background:#c93b34;color:#fff;font-weight:800;font-size:12px;padding:4px 14px;border-radius:20px;letter-spacing:2px;}
+  .title-xl{font-size:25px;font-weight:900;color:var(--gold);line-height:1.18;text-shadow:0 2px 0 #0006;}
+  .title-xl small{display:block;font-size:13px;color:#caa97c;font-weight:600;letter-spacing:2px;margin-top:6px;}
+  .story{font-size:14.5px;color:#ecd3aa;line-height:1.85;max-width:350px;}.story b{color:var(--gold);}
+  .speaker{color:#f0a93a;font-weight:800;}
+  .goal{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px 16px;font-size:13px;color:#ecd3aa;line-height:1.7;}.goal b{color:var(--gold);}
+  .know{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:13px 16px;text-align:left;
+    font-size:12.5px;line-height:1.7;color:#e9cfa6;max-width:360px;width:100%;}.know b{color:var(--gold);}
+  .know .row{display:flex;gap:8px;}.know .row .k{color:#f0726a;min-width:42px;font-weight:700;}
+  .cta{background:linear-gradient(160deg,var(--gold),#d8902a);color:#3a230a;border:none;border-radius:30px;
+    padding:14px 38px;font-size:18px;font-weight:900;cursor:pointer;box-shadow:0 8px 0 #00000055,0 14px 24px #0006;letter-spacing:2px;}
+  .cta:active{transform:translateY(4px);box-shadow:0 4px 0 #00000055;}
+  .cta.sm{padding:10px 24px;font-size:14px;background:#3a2a1d;color:var(--cream);box-shadow:0 5px 0 #0005;}
+  .final-score{font-size:54px;font-weight:900;color:#fff;line-height:1;}
+  .rank{font-size:16px;color:var(--gold);font-weight:800;}
+  .tip{font-size:11px;color:#7a5d3c;}
+  .dots{display:flex;gap:7px;}.dots i{width:9px;height:9px;border-radius:50%;background:var(--line);}
+  .dots i.on{background:var(--gold);}.dots i.cur{background:#c93b34;transform:scale(1.3);}
+
+  /* duel pick */
+  .opps{display:flex;flex-direction:column;gap:9px;width:100%;max-width:360px;}
+  .opp{display:flex;align-items:center;gap:11px;background:#241a12;border:1px solid var(--line);
+    border-radius:14px;padding:11px 13px;cursor:pointer;transition:.08s;}
+  .opp:active{transform:scale(.98);}.opp .ava{font-size:26px;}
+  .opp .nm{flex:1;text-align:left;}.opp .nm b{font-size:15px;color:var(--cream);}
+  .opp .nm span{display:block;font-size:11px;color:#a98b62;}
+  .opp .pw{color:var(--gold);font-weight:800;font-size:13px;}
+  .vs-big{display:flex;align-items:center;justify-content:center;gap:14px;width:100%;}
+  .vs-big .side{flex:1;text-align:center;}.vs-big .side .a{font-size:44px;}
+  .vs-big .side b{display:block;font-size:14px;margin-top:4px;}
+  .vs-big .mid{font-size:30px;font-weight:900;color:var(--goose);}
+  .scoreline{display:flex;justify-content:space-around;width:100%;max-width:320px;font-size:13px;}
+  .scoreline div{text-align:center;}.scoreline b{display:block;font-size:30px;}
+
+  /* dex */
+  .dexgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;max-width:380px;}
+  .dexcell{background:#241a12;border:1px solid var(--line);border-radius:14px;overflow:hidden;cursor:pointer;}
+  .dexcell img{width:100%;height:84px;object-fit:cover;display:block;}
+  .dexcell .nm{font-size:12px;padding:6px 8px;color:var(--cream);font-weight:700;}
+  .dexcell.locked img{filter:grayscale(1) brightness(.35);}
+  .dexcell.locked .nm{color:#6b543a;}
+  .dexcell.locked .nm::after{content:" 🔒";}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ============ HOME ============ -->
+  <div class="screen" id="home">
+    <div class="logo">
+      <h1>鸭 <span class="vs">还是</span> 鹅</h1>
+      <p>火眼金睛 · 借势科普大对决</p>
+    </div>
+    <div class="teamcard">
+      <div class="teamrow">
+        <div class="ava">🏫</div>
+        <div class="info">
+          <b><span id="teamName">我的战队</span><span class="edit" id="editTeam">改名</span></b>
+          <div class="rank" id="rankName">🍗 萌新食客</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:20px;font-weight:900;color:#fff" id="powerNum">0</div>
+          <div style="font-size:9px;color:#b89668">战力值</div>
+        </div>
+      </div>
+      <div class="pbar"><i id="powerBar"></i></div>
+      <div class="pstats">
+        <div><b id="stStreak">0</b><span>当前连胜</span></div>
+        <div><b id="stBestStreak">0</b><span>最高连胜</span></div>
+        <div><b id="stDex">0/8</b><span>图鉴</span></div>
+        <div><b id="stTotal">0</b><span>累计鉴定</span></div>
+      </div>
+    </div>
+
+    <div class="modes">
+      <div class="mode" id="mFood"><div class="ic">🍗</div><div class="tx"><b>熟食辨腿 · 剧情</b><span>鹅腿摊保卫战，4 夜剧情闯关</span></div><div class="go">▶</div></div>
+      <div class="mode" id="mAnimal"><div class="ic">🦆</div><div class="tx"><b>活体识鸟 · 科普</b><span>从雏鸟到成年，认清活鸭与活鹅</span></div><div class="go">▶</div></div>
+      <div class="mode" id="mDuel"><div class="ic">⚔️</div><div class="tx"><b>校际对决 · PK</b><span>代表战队守擂，赢取战力上榜</span></div><div class="go">▶</div></div>
+      <div class="mode" id="mDex"><div class="ic">📖</div><div class="tx"><b>鸭鹅图鉴</b><span>收集解锁，系统看懂鸭与鹅</span></div><div class="go">▶</div></div>
+    </div>
+
+    <div class="board-rank">
+      <h3><span>🏆 校际战力榜</span><span style="font-size:11px;color:#a98b62" id="lbHint">他校也在拼命刷题…</span></h3>
+      <div id="leaderboard"></div>
+    </div>
+    <div class="tip" style="text-align:center;margin-top:10px">图片素材来自 Wikimedia Commons（CC 授权）· 纯科普娱乐</div>
+  </div>
+
+  <!-- ============ PLAY ============ -->
+  <div class="screen hide" id="play">
+    <div class="top">
+      <div class="back" id="playBack">‹</div>
+      <div class="brand" id="playTitle">鸭还是鹅<small>火眼金睛</small></div>
+      <div class="stat"><b id="score">0</b><span>本局分</span></div>
+    </div>
+    <div class="hud" id="hud"></div>
+    <div class="lives" id="lives"></div>
+    <div class="timerwrap"><div id="timer"></div></div>
+    <div class="stage">
+      <div class="card" id="card">
+        <div class="combo" id="combo"></div>
+        <div class="order"><b id="order">请鉴定！</b></div>
+        <div class="legwrap" id="legwrap"></div>
+        <div class="tagline" id="tagline"></div>
+        <div class="verdict" id="verdict"></div>
+        <div class="swipehint l" id="hintL">🦆</div>
+        <div class="swipehint r" id="hintR">🦢</div>
+      </div>
+    </div>
+    <div class="controls">
+      <button class="btn duck" id="btnDuck">🦆 鸭<small>← 这是鸭</small></button>
+      <button class="btn goose" id="btnGoose">🦢 鹅<small>这是鹅 →</small></button>
+    </div>
+  </div>
+
+  <!-- overlays live inside app -->
+  <div class="overlay hide" id="storyScreen">
+    <div class="chapter-tag" id="storyTag"></div>
+    <div class="title-xl" id="storyTitle" style="font-size:23px"></div>
+    <div class="story" id="storyText"></div>
+    <div class="goal" id="storyGoal"></div>
+    <div class="dots" id="dots"></div>
+    <button class="cta" id="storyBtn">开始</button>
+  </div>
+
+  <div class="overlay hide" id="resultScreen">
+    <div class="title-xl" id="resTitle">结算</div>
+    <div class="story" id="resStory"></div>
+    <div class="final-score" id="resScore">0</div>
+    <div class="rank" id="resReward"></div>
+    <div class="know" id="resKnow"></div>
+    <button class="cta" id="resAgain">再来一局</button>
+    <button class="cta sm" id="resHome">回首页</button>
+  </div>
+
+  <div class="overlay hide" id="duelPick">
+    <div class="title-xl" style="font-size:22px">⚔️ 选择对手战队<small>赢一场，战力上涨、积分进本校榜</small></div>
+    <div class="opps" id="oppList"></div>
+    <button class="cta sm" id="duelPickBack">返回</button>
+  </div>
+
+  <div class="overlay hide" id="duelResult">
+    <div class="title-xl" id="duelResTitle" style="font-size:24px">对决结束</div>
+    <div class="vs-big">
+      <div class="side"><div class="a">🏫</div><b id="drMe">我</b></div>
+      <div class="mid">VS</div>
+      <div class="side"><div class="a" id="drOppAva">🏴</div><b id="drOpp">对手</b></div>
+    </div>
+    <div class="scoreline"><div><b id="drMyScore" style="color:#4ec77f">0</b>我的得分</div><div><b id="drOppScore" style="color:#e8584d">0</b>对手得分</div></div>
+    <div class="rank" id="drReward"></div>
+    <div class="know" id="drKnow"></div>
+    <button class="cta" id="drAgain">再战一场</button>
+    <button class="cta sm" id="drHome">回首页</button>
+  </div>
+
+  <div class="overlay hide" id="dexScreen">
+    <div class="title-xl" style="font-size:22px">📖 鸭鹅图鉴<small>认对即解锁 · 点开看科普</small></div>
+    <div class="dexgrid" id="dexGrid"></div>
+    <div class="know hide" id="dexDetail"></div>
+    <button class="cta sm" id="dexBack">返回首页</button>
+  </div>
+
+  <!-- name edit -->
+  <div class="overlay hide" id="nameScreen">
+    <div class="title-xl" style="font-size:22px">给你的战队起个名</div>
+    <input id="nameInput" maxlength="10" placeholder="例如：鉴鹅天团"
+      style="width:100%;max-width:300px;padding:13px 16px;border-radius:14px;border:1px solid var(--line);
+      background:#241a12;color:#fff;font-size:18px;text-align:center;outline:none">
+    <div class="tip">最多 10 个字 · 会保存在本机</div>
+    <button class="cta" id="nameSave">就叫这个</button>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  const $=id=>document.getElementById(id);
+
+  /* ============ 数据 ============ */
+  // 物种定义（图鉴 + 判定）
+  const SPECIES={
+    duckLeg:  {type:'duck', name:'鸭腿',   img:'img/duck2.jpg',
+      info:'鸭腿个头小、骨头细，市场价约 8–12 元；皮下油多，烤后金黄。这次事件里，正是它被拿来冒充鹅腿。'},
+    roastDuck:{type:'duck', name:'烤鸭',   img:'img/duck6.jpg',
+      info:'北京烤鸭皮色棕红油润、片皮带肉；整鸭明显比鹅小一圈，皮更容易起皱。'},
+    gooseLeg: {type:'goose',name:'鹅腿',   img:'img/goose1.jpg',
+      info:'鹅腿大而长、肉厚「压秤」，骨粗关节大；市价约 15–20 元，比鸭腿贵不少——这就是被冒充的原因。'},
+    roastGoose:{type:'goose',name:'烧鹅/烤鹅',img:'img/goose2.jpg',
+      info:'广式烧鹅皮色枣红发亮、平滑硬挺；整只比鸭大一圈，肉色更红润。'},
+    duckling: {type:'duck', name:'雏鸭',   img:'img/animals/duckling2.jpg',
+      info:'小鸭体型小而圆、脖子短，喙宽扁像小勺；野鸭雏鸟带褐色条纹。'},
+    gosling:  {type:'goose',name:'雏鹅',   img:'img/animals/gosling2.jpg',
+      info:'小鹅个头更大、脖子更长，绒毛偏黄绿，站姿更挺——同龄就比小鸭「高半头」。'},
+    adultDuck:{type:'duck', name:'成年鸭', img:'img/animals/aduck1.jpg',
+      info:'成年鸭脖子短、喙宽扁如勺，体型小；家鸭多为白色或杂色，走路一摇一摆。'},
+    adultGoose:{type:'goose',name:'成年鹅',img:'img/animals/agoose1.jpg',
+      info:'成年鹅脖子长、体型大，站得高、叫声响；部分品种额头有「肉瘤」，鸭子则没有。'},
+  };
+  const DEX_ORDER=['duckLeg','roastDuck','gooseLeg','roastGoose','duckling','gosling','adultDuck','adultGoose'];
+
+  // 题库（每张图 -> 物种）
+  const ITEMS=[
+    // 熟食
+    {src:'img/duck1.jpg',sp:'duckLeg'},{src:'img/duck2.jpg',sp:'duckLeg'},{src:'img/duck3.jpg',sp:'duckLeg'},
+    {src:'img/duck4.jpg',sp:'duckLeg'},{src:'img/duck5.jpg',sp:'duckLeg'},
+    {src:'img/duck6.jpg',sp:'roastDuck'},{src:'img/duck7.jpg',sp:'roastDuck'},
+    {src:'img/goose1.jpg',sp:'gooseLeg'},{src:'img/goose6.jpg',sp:'gooseLeg'},
+    {src:'img/goose7.jpg',sp:'gooseLeg'},{src:'img/goose8.jpg',sp:'gooseLeg'},
+    {src:'img/goose2.jpg',sp:'roastGoose'},{src:'img/goose3.jpg',sp:'roastGoose'},
+    {src:'img/goose4.jpg',sp:'roastGoose'},{src:'img/goose5.jpg',sp:'roastGoose'},
+    // 活体·雏
+    {src:'img/animals/duckling1.jpg',sp:'duckling'},{src:'img/animals/duckling2.jpg',sp:'duckling'},
+    {src:'img/animals/duckling3.jpg',sp:'duckling'},
+    {src:'img/animals/gosling1.jpg',sp:'gosling'},{src:'img/animals/gosling2.jpg',sp:'gosling'},
+    {src:'img/animals/gosling3.jpg',sp:'gosling'},
+    // 活体·成年鸭（9 张，多品种多毛色）
+    {src:'img/animals/aduck1.jpg',sp:'adultDuck'},{src:'img/animals/aduck2.jpg',sp:'adultDuck'},
+    {src:'img/animals/aduck3.jpg',sp:'adultDuck'},{src:'img/animals/aduck4.jpg',sp:'adultDuck'},
+    {src:'img/animals/aduck5.jpg',sp:'adultDuck'},{src:'img/animals/aduck6.jpg',sp:'adultDuck'},
+    {src:'img/animals/aduck7.jpg',sp:'adultDuck'},{src:'img/animals/aduck9.jpg',sp:'adultDuck'},
+    {src:'img/animals/aduck10.jpg',sp:'adultDuck'},
+    // 活体·成年鹅（8 张，灰雁鹅/白家鹅等）
+    {src:'img/animals/agoose1.jpg',sp:'adultGoose'},{src:'img/animals/agoose2.jpg',sp:'adultGoose'},
+    {src:'img/animals/agoose3.jpg',sp:'adultGoose'},{src:'img/animals/agoose4.jpg',sp:'adultGoose'},
+    {src:'img/animals/agoose5.jpg',sp:'adultGoose'},{src:'img/animals/agoose6.jpg',sp:'adultGoose'},
+    {src:'img/animals/agoose9.jpg',sp:'adultGoose'},{src:'img/animals/agoose10.jpg',sp:'adultGoose'},
+  ];
+  ITEMS.forEach(it=>{it.type=SPECIES[it.sp].type;});
+  const POOLS={
+    food: ITEMS.filter(i=>['duckLeg','roastDuck','gooseLeg','roastGoose'].includes(i.sp)),
+    juvenile: ITEMS.filter(i=>['duckling','gosling'].includes(i.sp)),
+    adult: ITEMS.filter(i=>['adultDuck','adultGoose'].includes(i.sp)),
+    animal: ITEMS.filter(i=>['duckling','gosling','adultDuck','adultGoose'].includes(i.sp)),
+    all: ITEMS,
+  };
+  // 预加载
+  ITEMS.forEach(i=>{const im=new Image();im.src=i.src;});
+
+  const FACTS={
+    food:['鹅腿肉厚「压秤」，鸭腿拿在手里明显轻。','鸭肉偏粉白，鹅肉断面更红润。',
+      '烧鹅皮平滑硬挺，烧鸭皮更容易起皱。','价格也露馅：鸭腿约8-12元，鹅腿要15-20元。',
+      '鹅个头大，整只比鸭子大一圈。'],
+    animal:['最直观的区别：鹅脖子长，鸭脖子短。','鸭喙宽扁像勺子，鹅喙更尖、根部更高。',
+      '同龄时小鹅就比小鸭「高半头」。','成年鹅站姿高挺，体型明显大过鸭。',
+      '有些家鹅额头有「肉瘤」，鸭子从来没有。','小鸭圆滚滚，小鹅更修长。'],
+  };
+
+  // 剧情·熟食
+  const FOOD_STAGES=[
+    {tag:'第一夜',name:'初来乍到',target:6,time:5.0,lives:3,pool:'food',
+     story:'<span class="speaker">鹅腿摊主：</span>「窗口就交给你啦！别紧张，先把<b>鸭和鹅</b>认清楚——记住，鹅个头大一圈、小腿修长。」',
+     goal:'正确鉴定 <b>6</b> 只 · 失误 3 次被换下'},
+    {tag:'第二夜',name:'排队如龙',target:9,time:4.0,lives:3,pool:'food',
+     story:'队伍从国贸排到了地铁口。<span class="speaker">摊主：</span>「快！同学们等不及了，手要快眼要尖！」',
+     goal:'正确鉴定 <b>9</b> 只 · 节奏更快'},
+    {tag:'第三夜',name:'李鬼现身',target:12,time:3.2,lives:3,pool:'food',
+     story:'<span class="speaker">摊主压低声音：</span>「隔壁<b style="color:#f0726a">老王摊</b>专拿便宜鸭腿冒充我的鹅腿！今晚又混进队里了，你可得替我把住关！」',
+     goal:'识破 <b>12</b> 只 · 真假混杂'},
+    {tag:'决战夜',name:'国贸对决',target:15,time:2.5,lives:4,pool:'food',
+     story:'老王当面叫板：「你那破窗口，能分得清？」<span class="speaker">摊主：</span>「我的小帮手火眼金睛，今晚让全国贸看看——<b>谁才分得清鸭和鹅！</b>」',
+     goal:'连续鉴定 <b>15</b> 只 · 揭穿骗局！'},
+  ];
+  // 科普·活体
+  const ANIMAL_STAGES=[
+    {tag:'第一关',name:'破壳辨雏',target:6,time:5.0,lives:3,pool:'juvenile',
+     story:'科普关来啦！<span class="speaker">饲养员：</span>「刚出壳的小鸭和小鹅都毛茸茸，可别认错——<b>小鹅个头更大、脖子更长</b>。」',
+     goal:'认对 <b>6</b> 只雏鸟 · 雏鸭 vs 雏鹅'},
+    {tag:'第二关',name:'成年初阵',target:8,time:4.0,lives:3,pool:'adult',
+     story:'它们长大了——<b>同样是成年</b>，才好比。<span class="speaker">饲养员：</span>「成年看脖子和喙：<b>鹅脖长、喙尖根高；鸭脖短、喙宽扁</b>。别被毛色骗了，绿头、白、灰都有。」',
+     goal:'认对 <b>8</b> 只成鸟 · 成年鸭 vs 成年鹅'},
+    {tag:'终关',name:'成年决战',target:12,time:3.0,lives:3,pool:'adult',
+     story:'全是成年鸭鹅、多种毛色混战！<span class="speaker">饲养员：</span>「白鹅 vs 白鸭、绿头鸭 vs 灰雁鹅——只看脖子长短和体型，才是真本事。」',
+     goal:'同龄成鸟连认 <b>12</b> 只 · 只比脖子与体型'},
+  ];
+
+  // 对手战队（虚构）
+  const OPPONENTS=[
+    {ava:'🦆',name:'鸭王学院',skill:0.62,base:120},
+    {ava:'🦢',name:'天鹅书院',skill:0.74,base:240},
+    {ava:'🍢',name:'卤味职大',skill:0.82,base:360},
+    {ava:'👨‍🍳',name:'食神高专',skill:0.9, base:520},
+  ];
+
+  const RANKS=[
+    [0,'🍗 萌新食客'],[60,'🥉 入门学徒'],[150,'🥈 老食客'],
+    [300,'🥇 火眼银睛'],[500,'🏅 金睛巧匠'],[800,'🏆 国贸鉴腿宗师'],[1200,'👑 鸭鹅判官'],
+  ];
+  function rankOf(p){let r=RANKS[0];for(const x of RANKS)if(p>=x[0])r=x;return r;}
+  function nextRankAt(p){for(const x of RANKS)if(x[0]>p)return x[0];return RANKS[RANKS.length-1][0];}
+
+  /* ============ 存档 ============ */
+  const KEY='gooseduck_save_v3';
+  let save=load();
+  function load(){
+    try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.v===3)return s;}catch(e){}
+    const init={v:3,team:'我的战队',named:false,power:0,streak:0,bestStreak:0,totalCorrect:0,
+      duelWins:0,duelLosses:0,schoolScore:0,dex:{},rivals:{},lastSeen:Date.now()};
+    OPPONENTS.forEach(o=>init.rivals[o.name]=o.base);
+    return init;
+  }
+  function persist(){save.lastSeen=Date.now();localStorage.setItem(KEY,JSON.stringify(save));}
+  function unlock(sp){if(!save.dex[sp]){save.dex[sp]=true;return true;}return false;}
+  function dexCount(){return Object.keys(save.dex).filter(k=>save.dex[k]).length;}
+
+  /* ============ 路由 ============ */
+  const SCREENS=['home','play'];
+  const OVERLAYS=['storyScreen','resultScreen','duelPick','duelResult','dexScreen','nameScreen'];
+  function show(scr){SCREENS.forEach(s=>$(s).classList.toggle('hide',s!==scr));}
+  function overlay(ov){OVERLAYS.forEach(o=>$(o).classList.toggle('hide',o!==ov));}
+  function closeOverlays(){OVERLAYS.forEach(o=>$(o).classList.add('hide'));}
+
+  /* ============ 首页 ============ */
+  function renderHome(){
+    // 他校随时间增长
+    const mins=Math.max(0,(Date.now()-save.lastSeen)/60000);
+    OPPONENTS.forEach(o=>{save.rivals[o.name]=(save.rivals[o.name]||o.base)+Math.min(60,mins*o.skill*4);});
+    $('teamName').textContent=save.team;
+    $('powerNum').textContent=Math.round(save.power);
+    const rk=rankOf(save.power),nx=nextRankAt(save.power);
+    $('rankName').textContent=rk[1];
+    $('powerBar').style.width=Math.min(100,save.power/nx*100)+'%';
+    $('stStreak').textContent=save.streak;
+    $('stBestStreak').textContent=save.bestStreak;
+    $('stDex').textContent=dexCount()+'/8';
+    $('stTotal').textContent=save.totalCorrect;
+    // 排行榜
+    const list=OPPONENTS.map(o=>({nm:o.name,sc:Math.round(save.rivals[o.name]),me:false}));
+    list.push({nm:save.team,sc:Math.round(save.schoolScore),me:true});
+    list.sort((a,b)=>b.sc-a.sc);
+    $('leaderboard').innerHTML=list.map((r,i)=>
+      `<div class="lbrow ${r.me?'me':''}"><span class="pos">${i+1}</span>`+
+      `<span class="nm">${r.me?'🏫 ':''}${r.nm}</span><span class="sc">${r.sc}</span></div>`).join('');
+    persist();
+  }
+
+  /* ============ 通用出题 ============ */
+  let recent={};
+  function pick(poolName){
+    const pool=POOLS[poolName];recent[poolName]=recent[poolName]||[];
+    const r=recent[poolName];let c,t=0;
+    do{c=pool[(Math.random()*pool.length)|0];t++;}while(r.includes(c.src)&&t<10);
+    r.push(c.src);if(r.length>Math.min(4,pool.length-1))r.shift();
+    return c;
+  }
+  // 渲染一道题到棋盘
+  const card=$('card'),legwrap=$('legwrap'),order=$('order'),tagline=$('tagline'),
+        verdict=$('verdict'),combo=$('combo'),timerEl=$('timer');
+  function renderItem(item,prompt){
+    order.textContent=prompt;tagline.textContent='';
+    legwrap.style.transition='none';legwrap.style.transform='translateX(0) rotate(0)';legwrap.style.opacity='1';
+    legwrap.innerHTML='<img alt="">';const img=legwrap.firstChild;
+    img.onerror=()=>{legwrap.innerHTML='<div class="fallback">❓</div><div style="font-size:11px;color:#a9783f">图片加载失败，用菜单判断</div>';};
+    img.src=item.src;timerEl.style.transform='scaleX(1)';
+  }
+  function flyOut(dir){legwrap.style.transition='transform .35s ease,opacity .35s';
+    legwrap.style.transform='translateX('+(dir*340)+'px) rotate('+(dir*16)+'deg)';legwrap.style.opacity='0';}
+  function showVerdict(t,c){verdict.textContent=t;verdict.style.color=c;
+    verdict.classList.remove('show');void verdict.offsetWidth;verdict.classList.add('show');}
+  function shake(){card.animate([{transform:'translateX(0)'},{transform:'translateX(-9px)'},
+    {transform:'translateX(9px)'},{transform:'translateX(0)'}],{duration:240});}
+  function setLives(n,max){const el=$('lives');el.innerHTML='';for(let i=0;i<max;i++){
+    const s=document.createElement('span');s.textContent='🍗';if(i>=n)s.classList.add('lost');el.appendChild(s);}}
+
+  /* ============ 闯关引擎（熟食/活体共用） ============ */
+  let R=null,raf=null,lastT=0;
+  function startCampaign(kind){
+    const stages=kind==='food'?FOOD_STAGES:ANIMAL_STAGES;
+    R={kind,stages,idx:0,score:0,combo:0};
+    $('playTitle').innerHTML=(kind==='food'?'熟食辨腿':'活体识鸟')+'<small>火眼金睛</small>';
+    $('lives').style.display='flex';
+    show('play');showStage();
+  }
+  function showStage(){
+    const s=R.stages[R.idx];
+    $('storyTag').textContent=s.tag;$('storyTitle').textContent=s.name;
+    $('storyText').innerHTML=s.story;$('storyGoal').innerHTML='🎯 '+s.goal;
+    const dots=$('dots');dots.innerHTML='';
+    R.stages.forEach((_,k)=>{const e=document.createElement('i');
+      if(k<R.idx)e.classList.add('on');if(k===R.idx)e.classList.add('cur');dots.appendChild(e);});
+    $('storyBtn').textContent=R.idx===0?'开始！':'继续！';
+    overlay('storyScreen');
+  }
+  function beginStage(){
+    const s=R.stages[R.idx];
+    R.maxLives=s.lives;R.lives=s.lives;R.time=s.time;R.correct=0;R.combo=0;R.cur=null;
+    $('hud').innerHTML=`<span class="ch">${s.tag}</span><span>${s.name}</span>`+
+      `<div class="progbar"><i id="prog"></i></div><span id="progTxt">0/${s.target}</span>`;
+    setLives(R.lives,R.maxLives);
+    closeOverlays();R.playing=true;
+    nextRound();lastT=0;cancelAnimationFrame(raf);raf=requestAnimationFrame(loop);
+  }
+  const PROMPTS_FOOD=['窗口递出一只——请鉴定！','这一份，是鸭还是鹅？','热气腾腾，看准了！','小心李鬼混进来！'];
+  const PROMPTS_ANIMAL=['这只小家伙，是鸭是鹅？','瞧仔细了，鸭还是鹅？','看脖子和喙，快判断！','别被毛色骗了！'];
+  function nextRound(){
+    const s=R.stages[R.idx];R.cur={item:pick(s.pool),answered:false};
+    R.tLeft=R.roundTime=R.time;
+    renderItem(R.cur.item,(R.kind==='food'?PROMPTS_FOOD:PROMPTS_ANIMAL)[(Math.random()*4)|0]);
+  }
+  function campAnswer(guess){
+    if(!R||!R.playing||!R.cur||R.cur.answered)return;
+    R.cur.answered=true;
+    const it=R.cur.item,correct=guess===it.type;
+    const truth=it.type==='goose'?'🦢 鹅':'🦆 鸭',spName=SPECIES[it.sp].name;
+    flyOut(guess==='goose'?1:-1);
+    const facts=R.kind==='food'?FACTS.food:FACTS.animal;
+    if(correct){
+      R.combo++;R.score+=10+Math.min(R.combo,10)*2;R.correct++;
+      save.totalCorrect++;
+      const isNew=unlock(it.sp);
+      showVerdict('✓','var(--good)');
+      if(R.combo>1){combo.textContent='连击 ×'+R.combo;combo.classList.remove('show');void combo.offsetWidth;combo.classList.add('show');}
+      tagline.textContent=(isNew?'🎉 图鉴解锁「'+spName+'」！ ':'👍 没错，是'+truth+'！ ')+facts[(Math.random()*facts.length)|0];
+    }else{
+      R.combo=0;combo.classList.remove('show');R.lives--;setLives(R.lives,R.maxLives);
+      showVerdict('✗','var(--bad)');shake();
+      tagline.textContent='❌ 看走眼了，这其实是 '+truth+'（'+spName+'）';
+    }
+    $('score').textContent=R.score;
+    const s=R.stages[R.idx];if($('prog')){$('prog').style.width=Math.min(100,R.correct/s.target*100)+'%';$('progTxt').textContent=Math.min(R.correct,s.target)+'/'+s.target;}
+    campNext();
+  }
+  function campTimeout(){
+    if(!R.cur||R.cur.answered)return;R.cur.answered=true;
+    R.combo=0;combo.classList.remove('show');R.lives--;setLives(R.lives,R.maxLives);
+    const truth=R.cur.item.type==='goose'?'🦢 鹅':'🦆 鸭';
+    showVerdict('⏱','var(--gold)');tagline.textContent='⌛ 犹豫败北！那是 '+truth;
+    legwrap.style.transition='opacity .3s';legwrap.style.opacity='.3';
+    campNext();
+  }
+  function campNext(){
+    if(R.lives<=0){R.playing=false;setTimeout(()=>campEnd(false),700);return;}
+    if(R.correct>=R.stages[R.idx].target){R.playing=false;setTimeout(stageClear,700);return;}
+    setTimeout(()=>{if(R.playing)nextRound();},720);
+  }
+  function stageClear(){
+    cancelAnimationFrame(raf);
+    if(R.idx>=R.stages.length-1){campEnd(true);return;}
+    R.idx++;showStage();
+  }
+  function campEnd(win){
+    cancelAnimationFrame(raf);R.playing=false;
+    // 奖励战力
+    let reward=R.correct*3;if(win)reward+=R.kind==='food'?70:60;
+    save.power+=reward;save.schoolScore+=reward;
+    if(win){save.streak++;if(save.streak>save.bestStreak)save.bestStreak=save.streak;}
+    persist();
+    $('resTitle').textContent=win?(R.kind==='food'?'🎉 揭穿骗局，大获全胜！':'🎉 科普通关，火眼金睛！'):'这一局，收摊了';
+    $('resStory').innerHTML=win
+      ?(R.kind==='food'?'全国贸都看到了——你一眼分清鸭与鹅，<b style="color:#f0726a">老王</b>当场认怂溜走！'
+        :'雏鸟也好成鸟也罢，都逃不过你的眼睛。<span class="speaker">饲养员：</span>「这才叫真懂鸭鹅！」')
+      :'失误太多被换下。<span class="speaker">没关系：</span>「多看几只就练出来了，再来！」';
+    $('resScore').textContent='+'+reward;
+    $('resReward').textContent='战力 +'+reward+' · 当前段位 '+rankOf(save.power)[1]+(win?' · 连胜 '+save.streak:' · 连胜中断');
+    if(!win)save.streak=0,persist();
+    $('resKnow').innerHTML='<b>📖 记住核心区别：</b>'+
+      '<div class="row"><span class="k">脖子</span><span>鹅长、鸭短（最好认）</span></div>'+
+      '<div class="row"><span class="k">体型</span><span>鹅大一圈，鸭小巧</span></div>'+
+      '<div class="row"><span class="k">嘴/价</span><span>鸭喙宽扁；鹅腿更贵</span></div>';
+    R._again=()=>startCampaign(R.kind);
+    overlay('resultScreen');
+  }
+
+  /* ============ 对决引擎 ============ */
+  let D=null;
+  function openDuelPick(){
+    $('oppList').innerHTML=OPPONENTS.map((o,i)=>
+      `<div class="opp" data-i="${i}"><div class="ava">${o.ava}</div>`+
+      `<div class="nm"><b>${o.name}</b><span>难度 ${'★'.repeat(Math.round(o.skill*5))}</span></div>`+
+      `<div class="pw">${Math.round(save.rivals[o.name])}</div></div>`).join('');
+    $('oppList').querySelectorAll('.opp').forEach(el=>el.onclick=()=>startDuel(+el.dataset.i));
+    overlay('duelPick');
+  }
+  function startDuel(i){
+    const opp=OPPONENTS[i];
+    D={opp,q:0,total:7,myScore:0,myCorrect:0,time:3.0};
+    $('playTitle').innerHTML='校际对决<small>🆚 '+opp.name+'</small>';
+    $('lives').style.display='none';
+    show('play');closeOverlays();
+    D.playing=true;duelRound();lastT=0;cancelAnimationFrame(raf);raf=requestAnimationFrame(loop);
+  }
+  function duelRound(){
+    D.cur={item:pick('all'),answered:false};D.tLeft=D.roundTime=D.time;
+    $('hud').innerHTML=`<span class="ch">🆚 ${D.opp.ava} ${D.opp.name}</span>`+
+      `<div class="progbar"><i style="width:${D.q/D.total*100}%"></i></div><span>第 ${D.q+1}/${D.total} 题 · 得分 ${D.myScore}</span>`;
+    renderItem(D.cur.item,'⚔️ 抢答：是鸭还是鹅？');
+  }
+  function duelAnswer(guess){
+    if(!D||!D.playing||!D.cur||D.cur.answered)return;
+    D.cur.answered=true;const it=D.cur.item,correct=guess===it.type;
+    flyOut(guess==='goose'?1:-1);
+    if(correct){const bonus=Math.round(D.tLeft/D.roundTime*50);D.myScore+=100+bonus;D.myCorrect++;
+      save.totalCorrect++;unlock(it.sp);showVerdict('✓','var(--good)');
+      tagline.textContent='👍 +'+(100+bonus)+'（'+(it.type==='goose'?'鹅':'鸭')+'·答得越快分越高）';}
+    else{D.myScore=Math.max(0,D.myScore-30);showVerdict('✗','var(--bad)');shake();
+      tagline.textContent='❌ 答错 -30，那是 '+(it.type==='goose'?'🦢 鹅':'🦆 鸭');}
+    $('score').textContent=D.myScore;D.q++;
+    if(D.q>=D.total){D.playing=false;setTimeout(duelFinish,720);}
+    else setTimeout(()=>{if(D.playing)duelRound();},720);
+  }
+  function duelTimeout(){
+    if(!D.cur||D.cur.answered)return;D.cur.answered=true;
+    showVerdict('⏱','var(--gold)');tagline.textContent='⌛ 超时，没得分';
+    legwrap.style.transition='opacity .3s';legwrap.style.opacity='.3';D.q++;
+    if(D.q>=D.total){D.playing=false;setTimeout(duelFinish,720);}
+    else setTimeout(()=>{if(D.playing)duelRound();},720);
+  }
+  function duelFinish(){
+    cancelAnimationFrame(raf);
+    // 模拟对手：每题按 skill 命中，命中给 100 + 平均速度奖励
+    let aiScore=0,aiCorrect=0;
+    for(let k=0;k<D.total;k++){if(Math.random()<D.opp.skill){aiCorrect++;aiScore+=100+Math.round((20+Math.random()*30));}}
+    const win=D.myScore>=aiScore;
+    let reward=D.myCorrect*5+(win?50:-20);if(save.power+reward<0)reward=-save.power;
+    save.power+=reward;
+    if(win){save.duelWins++;save.streak++;if(save.streak>save.bestStreak)save.bestStreak=save.streak;
+      save.schoolScore+=D.myScore/5+40;save.rivals[D.opp.name]=Math.max(0,save.rivals[D.opp.name]-15);}
+    else{save.duelLosses++;save.streak=0;save.schoolScore+=D.myScore/8;save.rivals[D.opp.name]+=20;}
+    persist();
+    $('duelResTitle').textContent=win?'🏆 守擂成功！':'💢 惜败，下次再来';
+    $('drMe').textContent=save.team;$('drOpp').textContent=D.opp.name;$('drOppAva').textContent=D.opp.ava;
+    $('drMyScore').textContent=D.myScore;$('drOppScore').textContent=aiScore;
+    $('drReward').textContent=(reward>=0?'战力 +'+reward:'战力 '+reward)+' · '+rankOf(save.power)[1]+
+      (win?' · 连胜 '+save.streak+'，本校积分上涨！':' · 连胜中断');
+    $('drKnow').innerHTML='<b>🆚 战况：</b>你答对 '+D.myCorrect+'/'+D.total+'，对手答对 '+aiCorrect+'/'+D.total+
+      '。<br><span style="color:#a98b62">赢得越快、越准，战力与校际积分涨得越多。</span>';
+    overlay('duelResult');
+  }
+
+  /* ============ 计时主循环 ============ */
+  function loop(t){
+    const A=R&&R.playing?R:(D&&D.playing?D:null);
+    if(!A){return;}
+    if(!lastT)lastT=t;const dt=(t-lastT)/1000;lastT=t;
+    if(A.cur&&!A.cur.answered){A.tLeft-=dt;timerEl.style.transform='scaleX('+Math.max(0,A.tLeft/A.roundTime)+')';
+      if(A.tLeft<=0){A===R?campTimeout():duelTimeout();}}
+    raf=requestAnimationFrame(loop);
+  }
+  // 统一作答入口
+  function answer(guess){if(R&&R.playing)campAnswer(guess);else if(D&&D.playing)duelAnswer(guess);}
+
+  /* ============ 图鉴 ============ */
+  function openDex(){
+    $('dexDetail').classList.add('hide');
+    $('dexGrid').innerHTML=DEX_ORDER.map(k=>{const s=SPECIES[k],got=save.dex[k];
+      return `<div class="dexcell ${got?'':'locked'}" data-k="${k}"><img src="${s.img}" alt="">`+
+        `<div class="nm">${got?s.name:'？？？'}</div></div>`;}).join('');
+    $('dexGrid').querySelectorAll('.dexcell').forEach(el=>el.onclick=()=>{
+      const k=el.dataset.k,s=SPECIES[k];
+      $('dexDetail').classList.remove('hide');
+      $('dexDetail').innerHTML=save.dex[k]
+        ?`<b>${s.type==='goose'?'🦢':'🦆'} ${s.name}</b><br>${s.info}`
+        :'🔒 还没解锁——在「熟食辨腿」或「活体识鸟」里认对它，就能点亮这张图鉴卡。';
+    });
+    overlay('dexScreen');
+  }
+
+  /* ============ 事件绑定 ============ */
+  $('mFood').onclick=()=>startCampaign('food');
+  $('mAnimal').onclick=()=>startCampaign('animal');
+  $('mDuel').onclick=openDuelPick;
+  $('mDex').onclick=openDex;
+  $('playBack').onclick=()=>{R&&(R.playing=false);D&&(D.playing=false);cancelAnimationFrame(raf);
+    if(D&&!D.playing&&D.q<D.total)save.streak=0,persist();renderHome();show('home');};
+  $('storyBtn').onclick=beginStage;
+  $('resAgain').onclick=()=>{R._again&&R._again();};
+  $('resHome').onclick=()=>{renderHome();show('home');closeOverlays();};
+  $('duelPickBack').onclick=()=>{closeOverlays();};
+  $('drAgain').onclick=openDuelPick;
+  $('drHome').onclick=()=>{renderHome();show('home');closeOverlays();};
+  $('dexBack').onclick=()=>{renderHome();closeOverlays();};
+  // 改名
+  function openName(first){$('nameInput').value=first?'':save.team;overlay('nameScreen');setTimeout(()=>$('nameInput').focus(),50);}
+  $('editTeam').onclick=()=>openName(false);
+  $('nameSave').onclick=()=>{const v=$('nameInput').value.trim()||'我的战队';
+    save.team=v;save.named=true;persist();closeOverlays();renderHome();};
+
+  $('btnGoose').onclick=()=>answer('goose');
+  $('btnDuck').onclick=()=>answer('duck');
+  document.addEventListener('keydown',e=>{if((R&&R.playing)||(D&&D.playing)){
+    if(e.key==='ArrowLeft')answer('duck');if(e.key==='ArrowRight')answer('goose');}});
+  // 滑动/拖动
+  let sx=0,sw=false;
+  function dragMove(dx){const A=(R&&R.playing)?R:(D&&D.playing?D:null);if(!A||!A.cur||A.cur.answered)return;
+    legwrap.style.transition='none';legwrap.style.transform='translateX('+dx+'px) rotate('+(dx*0.05)+'deg)';
+    $('hintL').style.opacity=dx<-10?Math.min(1,-dx/120):0;$('hintR').style.opacity=dx>10?Math.min(1,dx/120):0;}
+  function dragEnd(dx){$('hintL').style.opacity=0;$('hintR').style.opacity=0;legwrap.style.transition='transform .15s';
+    if(Math.abs(dx)>60)answer(dx>0?'goose':'duck');else legwrap.style.transform='translateX(0) rotate(0)';}
+  card.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;sw=true;},{passive:true});
+  card.addEventListener('touchmove',e=>{if(sw)dragMove(e.touches[0].clientX-sx);},{passive:true});
+  card.addEventListener('touchend',e=>{if(!sw)return;sw=false;dragEnd(e.changedTouches[0].clientX-sx);});
+  let mx=0,md=false;
+  card.addEventListener('mousedown',e=>{mx=e.clientX;md=true;});
+  window.addEventListener('mousemove',e=>{if(md)dragMove(e.clientX-mx);});
+  window.addEventListener('mouseup',e=>{if(!md)return;md=false;dragEnd(e.clientX-mx);});
+
+  /* ============ 启动 ============ */
+  renderHome();show('home');
+  if(!save.named)setTimeout(()=>openName(true),300);
+})();
+</script>
+</body>
+</html>
